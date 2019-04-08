@@ -1,0 +1,94 @@
+## P1: Finding lanes 
+## Date: 3/30/19
+## Author: Blaine W. (blaine-ww)
+## SolidWhiteRight.jpg
+ 
+# TODO: Build your pipeline that will draw lane lines on the test_images
+# then save them to the test_images_output directory.
+
+# TODO: Build your pipeline that will draw lane lines on the test_images
+# then save them to the test_images_output directory.
+
+## Read in the image, uncomment the selected img
+# image = mpimg.imread(os.path.join("test_images/",'solidWhiteCurve.jpg'))
+image = mpimg.imread(os.path.join("test_images/",'solidWhiteRight.jpg'))
+# image = mpimg.imread('solidYellowCurve.jpg')
+# image = mpimg.imread('solidYellowCurve2.jpg')
+# image = mpimg.imread('solidYellowLeft.jpg')
+# image = mpimg.imread('whiteCarLaneSwitch.jpg')
+
+
+## Grayscale the img
+# gray = cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
+gray = grayscale(image)
+# plt.imshow(gray)
+cv2.imwrite('test_images_output/solidWhiteRight_gray.jpg',gray)
+
+## Define a kernel size and apply Gaussian smoothing
+# blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size),0)
+kernel_size = 5
+blur_gray = gaussian_blur(gray, kernel_size)
+# plt.imshow(blur_gray)
+cv2.imwrite('test_images_output/solidWhiteRight_blurGray.jpg',blur_gray)
+
+## Define our parameters for Canny and apply
+# edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+low_threshold = 70
+high_threshold = 140
+edges = canny(blur_gray, low_threshold, high_threshold)
+# plt.imshow(edges)
+cv2.imwrite('test_images_output/solidWhiteRight_edges.jpg',edges)
+
+## Next we'll create a masked edges image using cv2.fillPoly()
+# mask = np.zeros_like(edges)
+
+## This time we are defining a four sided polygon to mask
+# cv2.fillPoly(mask, vertices, ignore_mask_color)
+# masked_edges = cv2.bitwise_and(edges, mask)
+imshape = image.shape
+left_x=460
+right_x=520
+apex=310
+vertices = np.array([[(0,imshape[0]),(right_x, apex), (left_x,apex), (imshape[1],imshape[0])]], dtype=np.int32)
+masked_edges = region_of_interest(edges, vertices)
+# plt.imshow(masked_edges)
+cv2.imwrite('test_images_output/solidWhiteRight_maskedEdges.jpg',masked_edges)
+
+## Define the Hough transform parameters
+## Make a blank the same size as our image to draw on
+rho = 2 # distance resolution in pixels of the Hough grid
+theta = np.pi/180*1 # angular resolution in radians of the Hough grid
+threshold = 25     # minimum number of votes (intersections in Hough grid cell)
+min_line_length = 50  #minimum number of pixels making up a line
+max_line_gap = 130    # maximum gap in pixels between connectable line segments
+# line_image = np.copy(image)*0 # creating a blank to draw lines on
+
+## Run Hough on edge detected image
+## Output "lines" is an array containing endpoints of detected line segments
+# lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold, np.array([]),
+#                             min_line_length, max_line_gap)
+lines=hough_lines(masked_edges, rho, theta, threshold, min_line_length, max_line_gap)
+# plt.imshow(lines)
+cv2.imwrite('test_images_output/solidWhiteRight_lines.jpg',cv2.cvtColor(lines, cv2.COLOR_RGB2BGR))
+
+## Create a "color" binary image to combine with line image
+color_edges = np.dstack((edges, edges, edges)) 
+# plt.imshow(color_edges)
+# cv2.imwrite('test_images_output/solidWhiteCurve_c_edges_4.jpg',color_edges)
+
+## Draw the lines on the edge image
+# lines_edges = cv2.addWeighted(color_edges, 0.8, line_image, 1, 0) 
+line_edges=weighted_img(lines, image, a=0.8, ß=1., ?=0.)
+# plt.imshow(image)
+plt.imshow(line_edges)
+
+## Export _to the test_images_output directory
+# Warning requre cv2.cvtColor to convert color scale
+cv2.imwrite('test_images_output/solidWhiteRight_weighted_final.jpg',cv2.cvtColor(line_edges, cv2.COLOR_RGB2BGR))
+
+# Do the same for every other file 
+# cv2.imwrite('test_images_output/solidWhiteRight_done.jpg')
+# cv2.imwrite('test_images_output/solidYellowCurve_done.jpg')
+# cv2.imwrite('test_images_output/solidYellowCurve2_done.jpg')
+# cv2.imwrite('test_images_output/solidYellowLeft_done.jpg')
+# cv2.imwrite('test_images_output/whiteCarLaneSwitch_done.jpg')
